@@ -1,7 +1,5 @@
 package andriy.krupych.andenginegame.scene;
 
-import android.widget.Toast;
-
 import org.andengine.engine.camera.hud.HUD;
 import org.andengine.entity.Entity;
 import org.andengine.entity.scene.background.EntityBackground;
@@ -27,13 +25,6 @@ public class GameScene extends AbstractScene {
         createBackground();
         createPlayer();
         createHUD();
-
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(activity, "Hello world!", Toast.LENGTH_LONG).show();
-            }
-        });
     }
 
     @Override
