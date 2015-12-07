@@ -1,8 +1,11 @@
 package andriy.krupych.andenginegame.entity;
 
 import org.andengine.entity.sprite.TiledSprite;
+import org.andengine.input.touch.TouchEvent;
 import org.andengine.opengl.texture.region.ITiledTextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
+
+import andriy.krupych.andenginegame.ResourceManager;
 
 public class Player extends TiledSprite {
 
@@ -28,16 +31,33 @@ public class Player extends TiledSprite {
         setFlippedHorizontal(false);
     }
 
-    public void fly() {
+    public void stand() {
         setCurrentTileIndex(0);
     }
 
-    public void fall() {
+    public void fly() {
         setCurrentTileIndex(1);
+    }
+
+    public void fall() {
+        setCurrentTileIndex(2);
     }
 
     public void die() {
         setDead(true);
         setCurrentTileIndex(2);
+    }
+
+    @Override
+    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float pTouchAreaLocalX, float pTouchAreaLocalY) {
+        if (pSceneTouchEvent.isActionDown()) {
+            clearEntityModifiers();
+            ResourceManager.getInstance().soundJump.play();
+            return true;
+        } else if (pSceneTouchEvent.isActionMove()) {
+            setPosition(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
+            return true;
+        }
+        return false;
     }
 }

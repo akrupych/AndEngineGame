@@ -2,12 +2,21 @@ package andriy.krupych.andenginegame.scene;
 
 import org.andengine.engine.camera.hud.HUD;
 import org.andengine.entity.Entity;
+import org.andengine.entity.modifier.LoopEntityModifier;
+import org.andengine.entity.modifier.MoveModifier;
+import org.andengine.entity.modifier.RotationModifier;
+import org.andengine.entity.scene.IOnSceneTouchListener;
+import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.EntityBackground;
+import org.andengine.entity.sprite.AnimatedSprite;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.text.Text;
 import org.andengine.entity.text.TextOptions;
+import org.andengine.input.touch.TouchEvent;
 import org.andengine.util.adt.align.HorizontalAlign;
+import org.andengine.util.modifier.ease.EaseExponentialIn;
 
+import andriy.krupych.andenginegame.ResourceManager;
 import andriy.krupych.andenginegame.entity.Player;
 import andriy.krupych.andenginegame.factory.PlayerFactory;
 
@@ -25,6 +34,26 @@ public class GameScene extends AbstractScene {
         createBackground();
         createPlayer();
         createHUD();
+        AnimatedSprite fly = new AnimatedSprite(240, 200, res.enemyTextureRegion, vbom);
+        fly.animate(125);
+        attachChild(fly);
+        fly.registerEntityModifier(new LoopEntityModifier(new RotationModifier(2, 0, 360, EaseExponentialIn.getInstance())));
+        setOnSceneTouchListener(new IOnSceneTouchListener() {
+            @Override
+            public boolean onSceneTouchEvent(Scene pScene, TouchEvent pSceneTouchEvent) {
+                if (pSceneTouchEvent.isActionDown()) {
+                    player.clearEntityModifiers();
+                    player.registerEntityModifier(new MoveModifier(1, player.getX(), player.getY(),
+                            pSceneTouchEvent.getX(), pSceneTouchEvent.getY()));
+                    ResourceManager.getInstance().soundFall.play();
+                    return true;
+                }
+                return false;
+            }
+        });
+        registerTouchArea(player);
+        setTouchAreaBindingOnActionDownEnabled(true);
+        setTouchAreaBindingOnActionMoveEnabled(true);
     }
 
     @Override
@@ -43,7 +72,7 @@ public class GameScene extends AbstractScene {
         Sprite cloud2 = new Sprite(300, 600, res.cloud2TextureRegion, vbom);
         background.attachChild(cloud1);
         background.attachChild(cloud2);
-        setBackground(new EntityBackground(0.059f, 0.059f, 0.561f, background));
+        setBackground(new EntityBackground(213/255f, 245/255f, 248/255f, background));
     }
 
     private void createPlayer() {

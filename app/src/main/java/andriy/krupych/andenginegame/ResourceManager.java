@@ -106,4 +106,16 @@ public class ResourceManager {
         font.prepareLetters("01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?".toCharArray());
         font.load();
     }
+
+    public void playMusic() {
+        if (music != null && !music.isPlaying()) {
+            music.play();
+        }
+    }
+
+    public void stopMusic() {
+        if (music != null && music.isPlaying()) {
+            music.stop();
+        }
+    }
 }

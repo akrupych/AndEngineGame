@@ -39,6 +39,7 @@ public class GameActivity extends BaseGameActivity {
         ResourceManager.getInstance().loadGameAudio();
         ResourceManager.getInstance().loadGameGraphics();
         pOnCreateResourcesCallback.onCreateResourcesFinished();
+        ResourceManager.getInstance().playMusic();
     }
 
     @Override
@@ -52,5 +53,17 @@ public class GameActivity extends BaseGameActivity {
         AbstractScene scene = (AbstractScene) pScene;
         scene.populate();
         pOnPopulateSceneCallback.onPopulateSceneFinished();
+    }
+
+    @Override
+    protected synchronized void onResume() {
+        super.onResume();
+        ResourceManager.getInstance().playMusic();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        ResourceManager.getInstance().stopMusic();
     }
 }
