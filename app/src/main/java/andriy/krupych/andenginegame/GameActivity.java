@@ -19,6 +19,7 @@ public class GameActivity extends BaseGameActivity {
 
     public static final int CAMERA_WIDTH = 480;
     public static final int CAMERA_HEIGHT = 800;
+    private GameScene mScene;
 
     @Override
     public EngineOptions onCreateEngineOptions() {
@@ -44,8 +45,9 @@ public class GameActivity extends BaseGameActivity {
 
     @Override
     public void onCreateScene(OnCreateSceneCallback pOnCreateSceneCallback) throws IOException {
-        Scene scene = new GameScene();
-        pOnCreateSceneCallback.onCreateSceneFinished(scene);
+        mScene = new GameScene();
+        pOnCreateSceneCallback.onCreateSceneFinished(mScene);
+        mScene.onResume();
     }
 
     @Override
@@ -58,12 +60,16 @@ public class GameActivity extends BaseGameActivity {
     @Override
     protected synchronized void onResume() {
         super.onResume();
-        ResourceManager.getInstance().playMusic();
+        if (mScene!= null) {
+            mScene.onResume();
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        ResourceManager.getInstance().stopMusic();
+        if (mScene!= null) {
+            mScene.onPause();
+        }
     }
 }

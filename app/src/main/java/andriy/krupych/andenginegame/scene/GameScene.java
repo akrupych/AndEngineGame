@@ -12,18 +12,22 @@ import org.andengine.entity.sprite.AnimatedSprite;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.text.Text;
 import org.andengine.entity.text.TextOptions;
+import org.andengine.input.sensor.acceleration.AccelerationData;
+import org.andengine.input.sensor.acceleration.IAccelerationListener;
 import org.andengine.input.touch.TouchEvent;
 import org.andengine.util.adt.align.HorizontalAlign;
+import org.andengine.util.debug.Debug;
 import org.andengine.util.modifier.ease.EaseExponentialIn;
 
 import andriy.krupych.andenginegame.ResourceManager;
 import andriy.krupych.andenginegame.entity.Player;
 import andriy.krupych.andenginegame.factory.PlayerFactory;
 
-public class GameScene extends AbstractScene {
+public class GameScene extends AbstractScene implements IAccelerationListener {
 
     private Player player;
     private Text scoreText;
+    private float lastX = 0;
 
     public GameScene() {
         PlayerFactory.getInstance().create(vbom);
@@ -58,12 +62,34 @@ public class GameScene extends AbstractScene {
 
     @Override
     public void onPause() {
-
+        Debug.d("GameScene.onPause");
+        engine.disableAccelerationSensor(activity);
+        ResourceManager.getInstance().stopMusic();
     }
 
     @Override
     public void onResume() {
+        Debug.d("GameScene.onResume");
+        engine.enableAccelerationSensor(activity, this);
+        ResourceManager.getInstance().playMusic();
+    }
 
+    @Override
+    public void onAccelerationAccuracyChanged(AccelerationData pAccelerationData) {
+
+    }
+
+    @Override
+    public void onAccelerationChanged(AccelerationData pAccelerationData) {
+        if (Math.abs(pAccelerationData.getX() - lastX) > 0.5) {
+            if (pAccelerationData.getX() > 0) {
+                player.turnRight();
+            } else {
+                player.turnLeft();
+            }
+            lastX = pAccelerationData.getX();
+        }
+        player.setX(player.getX() + pAccelerationData.getX());
     }
 
     private void createBackground() {
