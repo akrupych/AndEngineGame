@@ -38,7 +38,17 @@ public class GameScene extends AbstractScene implements IAccelerationListener {
         createBackground();
         createPlayer();
         createHUD();
-        AnimatedSprite fly = new AnimatedSprite(240, 200, res.enemyTextureRegion, vbom);
+        final AnimatedSprite fly = new AnimatedSprite(240, 200, res.enemyTextureRegion, vbom) {
+            @Override
+            protected void onManagedUpdate(float pSecondsElapsed) {
+                super.onManagedUpdate(pSecondsElapsed);
+                if (collidesWith(player)) {
+                    setScale(2);
+                } else {
+                    setScale(1);
+                }
+            }
+        };
         fly.animate(125);
         attachChild(fly);
         fly.registerEntityModifier(new LoopEntityModifier(new RotationModifier(2, 0, 360, EaseExponentialIn.getInstance())));
