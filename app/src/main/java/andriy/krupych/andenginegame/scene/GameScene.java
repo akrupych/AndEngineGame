@@ -2,6 +2,8 @@ package andriy.krupych.andenginegame.scene;
 
 import org.andengine.engine.camera.hud.HUD;
 import org.andengine.entity.Entity;
+import org.andengine.entity.IEntity;
+import org.andengine.entity.modifier.IEntityModifier;
 import org.andengine.entity.modifier.LoopEntityModifier;
 import org.andengine.entity.modifier.MoveModifier;
 import org.andengine.entity.modifier.RotationModifier;
@@ -17,6 +19,7 @@ import org.andengine.input.sensor.acceleration.IAccelerationListener;
 import org.andengine.input.touch.TouchEvent;
 import org.andengine.util.adt.align.HorizontalAlign;
 import org.andengine.util.debug.Debug;
+import org.andengine.util.modifier.IModifier;
 import org.andengine.util.modifier.ease.EaseExponentialIn;
 
 import andriy.krupych.andenginegame.ResourceManager;
@@ -58,7 +61,22 @@ public class GameScene extends AbstractScene implements IAccelerationListener {
                 if (pSceneTouchEvent.isActionDown()) {
                     player.clearEntityModifiers();
                     player.registerEntityModifier(new MoveModifier(1, player.getX(), player.getY(),
-                            pSceneTouchEvent.getX(), pSceneTouchEvent.getY()));
+                            pSceneTouchEvent.getX(), pSceneTouchEvent.getY(), new IEntityModifier.IEntityModifierListener() {
+                        @Override
+                        public void onModifierStarted(IModifier<IEntity> pModifier, IEntity pItem) {
+
+                        }
+
+                        @Override
+                        public void onModifierFinished(IModifier<IEntity> pModifier, IEntity pItem) {
+//                            activity.runOnUpdateThread(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    player.detachSelf();
+//                                }
+//                            });
+                        }
+                    }));
                     ResourceManager.getInstance().soundFall.play();
                     return true;
                 }
