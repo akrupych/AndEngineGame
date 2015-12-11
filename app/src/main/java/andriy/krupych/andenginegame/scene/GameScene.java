@@ -1,29 +1,29 @@
 package andriy.krupych.andenginegame.scene;
 
+import android.hardware.SensorManager;
+
+import com.badlogic.gdx.math.Vector2;
+
 import org.andengine.engine.camera.hud.HUD;
 import org.andengine.entity.Entity;
-import org.andengine.entity.IEntity;
-import org.andengine.entity.modifier.IEntityModifier;
-import org.andengine.entity.modifier.LoopEntityModifier;
-import org.andengine.entity.modifier.MoveModifier;
-import org.andengine.entity.modifier.RotationModifier;
-import org.andengine.entity.scene.IOnSceneTouchListener;
-import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.EntityBackground;
-import org.andengine.entity.sprite.AnimatedSprite;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.text.Text;
 import org.andengine.entity.text.TextOptions;
+import org.andengine.extension.physics.box2d.PhysicsWorld;
+import org.andengine.extension.physics.box2d.util.Vector2Pool;
 import org.andengine.input.sensor.acceleration.AccelerationData;
 import org.andengine.input.sensor.acceleration.IAccelerationListener;
-import org.andengine.input.touch.TouchEvent;
 import org.andengine.util.adt.align.HorizontalAlign;
 import org.andengine.util.debug.Debug;
-import org.andengine.util.modifier.IModifier;
-import org.andengine.util.modifier.ease.EaseExponentialIn;
+
+import java.util.LinkedList;
+import java.util.Random;
 
 import andriy.krupych.andenginegame.ResourceManager;
+import andriy.krupych.andenginegame.entity.Platform;
 import andriy.krupych.andenginegame.entity.Player;
+import andriy.krupych.andenginegame.factory.PlatformFactory;
 import andriy.krupych.andenginegame.factory.PlayerFactory;
 
 public class GameScene extends AbstractScene implements IAccelerationListener {
@@ -31,9 +31,14 @@ public class GameScene extends AbstractScene implements IAccelerationListener {
     private Player player;
     private Text scoreText;
     private float lastX = 0;
+    private PhysicsWorld physicsWorld;
+    private Random rand = new Random();
+    private LinkedList<Platform> platforms = new LinkedList<>();
 
     public GameScene() {
-        PlayerFactory.getInstance().create(vbom);
+        physicsWorld = new PhysicsWorld(new Vector2(0, -SensorManager.GRAVITY_EARTH * 4), false);
+        PlayerFactory.getInstance().create(physicsWorld, vbom);
+        PlatformFactory.getInstance().create(physicsWorld, vbom);
     }
 
     @Override
@@ -41,51 +46,7 @@ public class GameScene extends AbstractScene implements IAccelerationListener {
         createBackground();
         createPlayer();
         createHUD();
-        final AnimatedSprite fly = new AnimatedSprite(240, 200, res.enemyTextureRegion, vbom) {
-            @Override
-            protected void onManagedUpdate(float pSecondsElapsed) {
-                super.onManagedUpdate(pSecondsElapsed);
-                if (collidesWith(player)) {
-                    setScale(2);
-                } else {
-                    setScale(1);
-                }
-            }
-        };
-        fly.animate(125);
-        attachChild(fly);
-        fly.registerEntityModifier(new LoopEntityModifier(new RotationModifier(2, 0, 360, EaseExponentialIn.getInstance())));
-        setOnSceneTouchListener(new IOnSceneTouchListener() {
-            @Override
-            public boolean onSceneTouchEvent(Scene pScene, TouchEvent pSceneTouchEvent) {
-                if (pSceneTouchEvent.isActionDown()) {
-                    player.clearEntityModifiers();
-                    player.registerEntityModifier(new MoveModifier(1, player.getX(), player.getY(),
-                            pSceneTouchEvent.getX(), pSceneTouchEvent.getY(), new IEntityModifier.IEntityModifierListener() {
-                        @Override
-                        public void onModifierStarted(IModifier<IEntity> pModifier, IEntity pItem) {
-
-                        }
-
-                        @Override
-                        public void onModifierFinished(IModifier<IEntity> pModifier, IEntity pItem) {
-//                            activity.runOnUpdateThread(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    player.detachSelf();
-//                                }
-//                            });
-                        }
-                    }));
-                    ResourceManager.getInstance().soundFall.play();
-                    return true;
-                }
-                return false;
-            }
-        });
-        registerTouchArea(player);
-        setTouchAreaBindingOnActionDownEnabled(true);
-        setTouchAreaBindingOnActionMoveEnabled(true);
+        addPlatform(240, 50, false);
     }
 
     @Override
@@ -93,6 +54,7 @@ public class GameScene extends AbstractScene implements IAccelerationListener {
         Debug.d("GameScene.onPause");
         engine.disableAccelerationSensor(activity);
         ResourceManager.getInstance().stopMusic();
+        unregisterUpdateHandler(physicsWorld);
     }
 
     @Override
@@ -100,6 +62,7 @@ public class GameScene extends AbstractScene implements IAccelerationListener {
         Debug.d("GameScene.onResume");
         engine.enableAccelerationSensor(activity, this);
         ResourceManager.getInstance().playMusic();
+        registerUpdateHandler(physicsWorld);
     }
 
     @Override
@@ -117,7 +80,9 @@ public class GameScene extends AbstractScene implements IAccelerationListener {
             }
             lastX = pAccelerationData.getX();
         }
-        player.setX(player.getX() + pAccelerationData.getX());
+        Vector2 gravity = Vector2Pool.obtain(pAccelerationData.getX() * 8, -SensorManager.GRAVITY_EARTH * 4);
+        physicsWorld.setGravity(gravity);
+        Vector2Pool.recycle(gravity);
     }
 
     private void createBackground() {
@@ -140,5 +105,16 @@ public class GameScene extends AbstractScene implements IAccelerationListener {
         scoreText.setAnchorCenter(0, 1);
         hud.attachChild(scoreText);
         camera.setHUD(hud);
+    }
+
+    private void addPlatform(float tx, float ty, boolean moving) {
+        Platform platform;
+        if (moving) {
+            platform = PlatformFactory.getInstance().createMovingPlatform(tx, ty, (rand.nextFloat() - 0.5f) * 10f);
+        } else {
+            platform = PlatformFactory.getInstance().createPlatform(tx, ty);
+        }
+        attachChild(platform);
+        platforms.add(platform);
     }
 }
